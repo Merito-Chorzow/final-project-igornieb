@@ -9,22 +9,21 @@ int main(void) {
     
     thermostat_t ts;
     thermostat_init(&ts, 1.2f, 0.15f, 0.6f);
-    
-    // 1. Test step response w trybie RUN
-    // Polecenie SET ustawia setpoint, START przechodzi w RUN
-    printf("=== Test 1: Step Response (Set=0.7) ===\n");
-    thermostat_rx_command(&ts, "SET 0.7");
+
+    // Test 1. Duży skok temperatury (grzanie)
+    printf("=== Test 1: Step Response (Heating, Set=5.0) ===\n");
+    thermostat_rx_command(&ts, "SET 5.0");
     thermostat_rx_command(&ts, "START");
     
-    // uruchamiamy 200 ticków (symulacja ~2 sekund przy ts=10ms)
-    for (int i = 0; i < 200; i++) {
+    // uruchamiamy 400 ticków (symulacja ~4 sekund)
+    for (int i = 0; i < 400; i++) {
         thermostat_tick(&ts);
         
-        // wypisujemy co 20 ticków, aby zobaczyć progres
-        if (i % 20 == 0) {
+        // wypisujemy co 40 ticków
+        if (i % 40 == 0) {
             printf("[%3d] T=%6.3f SET=%6.3f U=%6.3f OVH=%6.3f STATE=%s\n",
                    i, ts.measurement, ts.setpoint, ts.control_output, 
-                   ts.overshoot_max, fsm_state_name(ts.state_machine.current));
+                   ts.overshoot_max, fsm_state_name(ts.state_machine.current_state));
         }
     }
     
@@ -32,11 +31,11 @@ int main(void) {
     thermostat_rx_command(&ts, "STOP");
     printf("\nStopped. Final overshoot: %.3f\n\n", ts.overshoot_max);
     
-    // 2. Test zmiany setpointa
-    printf("=== Test 2: Multiple Setpoints ===\n");
+    // 2. Test zmiany setpointa w szerokim zakresie (grzanie i chłodzenie)
+    printf("=== Test 2: Multiple Setpoints (Heating & Cooling) ===\n");
     thermostat_init(&ts, 1.2f, 0.15f, 0.6f);
     
-    float setpoints[] = {0.3f, 0.6f, 0.9f, 0.5f};
+    float setpoints[] = {-2.0f, 4.0f, -3.0f, 1.0f};
     for (int sp = 0; sp < 4; sp++) {
         char cmd[32];
         snprintf(cmd, sizeof(cmd), "SET %.1f", setpoints[sp]);
@@ -44,9 +43,10 @@ int main(void) {
         thermostat_rx_command(&ts, "START");
         
         printf("\nSetpoint %.1f:\n", setpoints[sp]);
-        for (int i = 0; i < 150; i++) {
+        // Dłuższy czas na stabilizację
+        for (int i = 0; i < 250; i++) {
             thermostat_tick(&ts);
-            if (i % 30 == 0) {
+            if (i % 50 == 0) {
                 printf("  [%3d] T=%.3f U=%.3f\n", i, ts.measurement, ts.control_output);
             }
         }
@@ -63,7 +63,7 @@ int main(void) {
     for (int i = 0; i < 50; i++) {
         thermostat_tick(&ts);
     }
-    printf("State: %s, Temp: %.3f\n", fsm_state_name(ts.state_machine.current), ts.measurement);
+    printf("State: %s, Temp: %.3f\n", fsm_state_name(ts.state_machine.current_state), ts.measurement);
     
     // SYMULACJA ZAWIESZENIA: nadal wywoływujemy tick(), ale bez przetwarzania komend
     // W ten sposób watchdog_counter rośnie, ale system "nie odpowiada na komendy"
@@ -77,13 +77,13 @@ int main(void) {
     
     printf("After hang simulation, checking status:\n");
     printf("State: %s (should be SAFE), Temp: %.3f, U: %.3f\n", 
-           fsm_state_name(ts.state_machine.current), ts.measurement, ts.control_output);
+           fsm_state_name(ts.state_machine.current_state), ts.measurement, ts.control_output);
     thermostat_rx_command(&ts, "STATUS");
     
     // 4. Test recovery z SAFE stanu
     printf("\n=== Test 4: RESET Command (Recovery from SAFE) ===\n");
     thermostat_rx_command(&ts, "RESET");
-    printf("State after RESET: %s (should be IDLE)\n", fsm_state_name(ts.state_machine.current));
+    printf("State after RESET: %s (should be IDLE)\n", fsm_state_name(ts.state_machine.current_state));
     thermostat_rx_command(&ts, "STATUS");
     
     printf("\n=== TX Buffer Output ===\n");

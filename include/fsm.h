@@ -10,8 +10,8 @@ typedef enum {
 
 typedef struct {
     // struktura przechowująca stan FSM
-    fsm_state_t current;
-    fsm_state_t next;
+    fsm_state_t current_state;
+    fsm_state_t next_state;
 } fsm_t;
 
 void fsm_init(fsm_t* fsm);

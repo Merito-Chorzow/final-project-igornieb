@@ -2,9 +2,9 @@
 #include <stdint.h>
 
 typedef struct {
-    float temp;         // Bieżąca temperatura
+    float temperature;  // Bieżąca temperatura
     float alpha;        // Parametr dynamiki termostatu: 0 < alpha < 1
-    // WHY: alpha reprezentuje stosunek Ts/tau (gdzie tau to stała czasowa)
+    // alpha reprezentuje stosunek Ts/tau (gdzie tau to stała czasowa)
     // Wyższa alpha = szybsze dopasowanie się temperatury do wejścia
     // temp[k+1] = temp[k] + alpha * (input - temp[k])
 } plant_thermostat_t;

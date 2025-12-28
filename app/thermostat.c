@@ -16,8 +16,8 @@ void thermostat_init(thermostat_t* ts, float kp, float ki, float plant_alpha) {
     fsm_init(&ts->state_machine);
     
     // przejście INIT->IDLE - system gotów do pracy
-    ts->state_machine.current = STATE_IDLE;
-    ts->state_machine.next = STATE_IDLE;
+    ts->state_machine.current_state = STATE_IDLE;
+    ts->state_machine.next_state = STATE_IDLE;
     
     ts->setpoint = 0.0f;
     ts->measurement = 0.0f;
@@ -44,7 +44,7 @@ void thermostat_tick(thermostat_t* ts) {
     ts->measurement = plant_update(&ts->plant, ts->control_output);
     
     // 2. Logika regulatora temperatury
-    if (ts->state_machine.current == STATE_RUNNING) {
+    if (ts->state_machine.current_state == STATE_RUNNING) {
         ts->control_output = control_pi_step(&ts->controller, ts->setpoint, ts->measurement, TS);
         
         // śledzenie overshoot'u
@@ -58,16 +58,16 @@ void thermostat_tick(thermostat_t* ts) {
     } else {
         // reset wyjścia i całki w trybach innych niż RUNNING
         ts->control_output = 0.0f;
-        ts->controller.i_acc = 0.0f;
+        ts->controller.integral_accumulator = 0.0f;
     }
     
     // 3.  FSM - sprawdzenie warunków przejścia
     // WHY: warunki dotyczą bezpieczeństwa (watchdog, limity temperatury)
-    int limits_ok = (ts->measurement < 1.5f) && (ts->measurement > -1.5f);
+    int limits_ok = (ts->measurement < 8.0f) && (ts->measurement > -8.0f);
     int watchdog_ok = (ts->watchdog_counter <= ts->watchdog_timeout);
     
-    ts->state_machine.next = fsm_next_state(&ts->state_machine, watchdog_ok, limits_ok);
-    ts->state_machine.current = ts->state_machine.next;
+    ts->state_machine.next_state = fsm_next_state(&ts->state_machine, watchdog_ok, limits_ok);
+    ts->state_machine.current_state = ts->state_machine.next_state;
     
     // 4. Telemetria / Logi
     // wypisanie statusu co 50 ticków (przejrzystość logów)
@@ -96,8 +96,8 @@ void thermostat_rx_command(thermostat_t* ts, const char* cmd) {
     } 
     else if (strncmp(cmd, "START", 5) == 0) {
         // START przechodzi do RUN, jeśli było w IDLE
-        if (ts->state_machine.current == STATE_IDLE) {
-            ts->state_machine.current = STATE_RUNNING;
+        if (ts->state_machine.current_state == STATE_IDLE) {
+            ts->state_machine.current_state = STATE_RUNNING;
             ts->watchdog_counter = 0;  // Reset watchdoga przy starcie
             ringbuf_put(&ts->tx, 'O');
             ringbuf_put(&ts->tx, 'K');
@@ -113,7 +113,7 @@ void thermostat_rx_command(thermostat_t* ts, const char* cmd) {
     }
     else if (strncmp(cmd, "STOP", 4) == 0) {
         // STOP przechodzi do IDLE
-        ts->state_machine.current = STATE_IDLE;
+        ts->state_machine.current_state = STATE_IDLE;
         ts->control_output = 0.0f;
         ringbuf_put(&ts->tx, 'O');
         ringbuf_put(&ts->tx, 'K');
@@ -129,7 +129,7 @@ void thermostat_rx_command(thermostat_t* ts, const char* cmd) {
     }
     else if (strncmp(cmd, "RESET", 5) == 0) {
         // RESET pozwala wyjść z FAULT/SAFE - system musi wiedzieć, że problem jest naprawiony
-        ts->state_machine.current = STATE_IDLE;
+        ts->state_machine.current_state = STATE_IDLE;
         ts->fault_count = 0;
         ts->overshoot_max = 0.0f;
         ringbuf_put(&ts->tx, 'O');
@@ -164,13 +164,13 @@ void thermostat_rx_command(thermostat_t* ts, const char* cmd) {
 }
 
 void thermostat_get_status(thermostat_t* ts, char* buf, size_t len) {
-    // telemetria w formacie tekstowym, łatwy do czytania dla operatora
+    // telemetria w formacie tekstowym, łatwy do odczytu dla operatora
     snprintf(buf, len,
         "T=%.2f SET=%.2f U=%.2f ST=%s OVH=%.3f TICKS=%u\r\n",
         ts->measurement,
         ts->setpoint,
         ts->control_output,
-        fsm_state_name(ts->state_machine.current),
+        fsm_state_name(ts->state_machine.current_state),
         ts->overshoot_max,
         ts->tick_count
     );
