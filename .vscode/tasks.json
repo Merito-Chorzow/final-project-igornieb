@@ -5,7 +5,9 @@
             "label": "C/C++: Build (Makefile)",
             "type": "shell",
             "command": "make",
-            "args": ["build"],
+            "args": [
+                "build"
+            ],
             "problemMatcher": [
                 "$gcc"
             ],
@@ -19,7 +21,9 @@
             "label": "C/C++: Run",
             "type": "shell",
             "command": "make",
-            "args": ["run"],
+            "args": [
+                "run"
+            ],
             "dependsOn": "C/C++: Build (Makefile)",
             "problemMatcher": [],
             "group": {
@@ -32,7 +36,9 @@
             "label": "C/C++: Clean",
             "type": "shell",
             "command": "make",
-            "args": ["clean"],
+            "args": [
+                "clean"
+            ],
             "problemMatcher": [],
             "detail": "Clean build artifacts"
         }
