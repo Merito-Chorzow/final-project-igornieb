@@ -166,7 +166,7 @@ void thermostat_rx_command(thermostat_t* ts, const char* cmd) {
 void thermostat_get_status(thermostat_t* ts, char* buf, size_t len) {
     // telemetria w formacie tekstowym, łatwy do czytania dla operatora
     snprintf(buf, len,
-        "T=%.2f SET=%.2f U=%.2f ST=%s OVH=%.3f TICKS=%lu\r\n",
+        "T=%.2f SET=%.2f U=%.2f ST=%s OVH=%.3f TICKS=%u\r\n",
         ts->measurement,
         ts->setpoint,
         ts->control_output,
