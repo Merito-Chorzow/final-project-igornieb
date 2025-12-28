@@ -7,9 +7,10 @@ void fsm_init(fsm_t* fsm) {
 }
 
 fsm_state_t fsm_next_state(fsm_t* fsm, int watchdog_ok, int limits_ok) {
-    // zmiana stanu na podstawie warunków wejściowych
+    // ustawienie stanu na podstawie warunków wejściowych
     // założenie FSM to proste przejścia stanów z mozliwością przejscia w stan bezpieczny w razie wystapienia problemu
-    
+    // zmiana stanu następuje w main.c na podstawie wyniku tej funkcji
+
     switch (fsm->current) {
         case STATE_INIT:
             // po inicjalizacji mozemy przejść jedynie do IDLE
