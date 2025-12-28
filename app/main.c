@@ -34,7 +34,7 @@ int main(void) {
     
     // 2. Test zmiany setpointa
     printf("=== Test 2: Multiple Setpoints ===\n");
-    thermostat_init(&ts, 1.2f, 0.15f, 0.6f);  // Zbalansowane parametry
+    thermostat_init(&ts, 1.2f, 0.15f, 0.6f);
     
     float setpoints[] = {0.3f, 0.6f, 0.9f, 0.5f};
     for (int sp = 0; sp < 4; sp++) {
