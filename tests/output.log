@@ -1,0 +1,69 @@
+=== Thermostat Control System ===
+PID: kp=1.2, ki=0.15, plant_alpha=0.6
+
+=== Test 1: Step Response (Heating, Set=5.0) ===
+[  0] T= 0.000 SET= 5.000 U= 1.000 OVH= 0.000 STATE=RUNNING
+[ 40] T= 5.028 SET= 5.000 U=-0.000 OVH= 0.029 STATE=RUNNING
+[ 80] T= 5.027 SET= 5.000 U=-0.000 OVH= 0.029 STATE=RUNNING
+[120] T= 5.026 SET= 5.000 U=-0.000 OVH= 0.029 STATE=RUNNING
+[160] T= 5.024 SET= 5.000 U=-0.000 OVH= 0.029 STATE=RUNNING
+[200] T= 5.023 SET= 5.000 U=-0.000 OVH= 0.029 STATE=RUNNING
+[240] T= 5.022 SET= 5.000 U=-0.000 OVH= 0.029 STATE=RUNNING
+[280] T= 5.021 SET= 5.000 U=-0.000 OVH= 0.029 STATE=RUNNING
+[320] T= 5.020 SET= 5.000 U=-0.000 OVH= 0.029 STATE=RUNNING
+[360] T= 5.019 SET= 5.000 U=-0.000 OVH= 0.029 STATE=RUNNING
+
+Stopped. Final overshoot: 0.029
+
+=== Test 2: Multiple Setpoints (Heating & Cooling) ===
+
+Setpoint -2.0:
+  [  0] T=0.000 U=-1.000
+  [ 50] T=-2.005 U=0.000
+  [100] T=-2.005 U=0.000
+  [150] T=-2.005 U=0.000
+  [200] T=-2.004 U=0.000
+
+Setpoint 4.0:
+  [  0] T=-2.004 U=1.000
+  [ 50] T=4.036 U=-0.000
+  [100] T=4.033 U=-0.000
+  [150] T=4.031 U=-0.000
+  [200] T=4.030 U=-0.000
+
+Setpoint -3.0:
+  [  0] T=4.028 U=-1.000
+  [ 50] T=-3.027 U=0.000
+  [100] T=-3.025 U=0.000
+  [150] T=-3.024 U=0.000
+  [200] T=-3.022 U=0.000
+
+Setpoint 1.0:
+  [  0] T=-3.021 U=1.000
+  [ 50] T=0.999 U=0.000
+  [100] T=0.999 U=0.000
+  [150] T=0.999 U=0.000
+  [200] T=0.999 U=0.000
+
+=== Test 3: Watchdog Timeout ===
+Running normally for 50 ticks...
+State: RUNNING, Temp: 0.501
+Simulating system hang (running 600 more ticks without responding to commands)...
+  [tick 550] Watchdog timeout triggered! State should change to SAFE
+After hang simulation, checking status:
+State: SAFE (should be SAFE), Temp: 0.500, U: 0.000
+
+=== Test 4: RESET Command (Recovery from SAFE) ===
+State after RESET: IDLE (should be IDLE)
+
+=== TX Buffer Output ===
+=== Thermostat Control System ===
+READY
+OK SET=0.50
+OK
+T=0.50 SET=0.50 U=-0.00 ST=RUNNING OVH=0.001 TICKS=50
+T=0.50 SET=0.50 U=-0.00 ST=RUNNING OVH=0.001 TICKS=100
+T=0.50 SET=0.50 U=-0.00 ST=RUNNING OVH=0.001 TICKS=150
+T=0.50 SET=0.50 U=-0.00 ST=RU
+
+=== All Tests Completed ===
