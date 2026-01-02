@@ -45,7 +45,7 @@ int main(void) {
 
         // Obsługa komend specjalnych/symulacyjnych
         // EXIT - wyjście z symulatora
-        if (strcasecmp(line_buffer, "EXIT") == 0) {
+        if (strncmp(line_buffer, "EXIT", 4) == 0) {
             printf("Exiting simulator.\n");
             break;
         }
