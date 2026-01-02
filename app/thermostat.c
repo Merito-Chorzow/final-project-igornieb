@@ -27,6 +27,7 @@ void thermostat_init(thermostat_t* ts, float kp, float ki, float plant_alpha) {
     ts->watchdog_timeout = WD_TIMEOUT;
     ts->fault_count = 0;
     ts->overshoot_max = 0.0f;
+    ts->print_status = 0;
     
     // komunikat gotowości
     const char* greeting = "=== Thermostat Control System ===\r\nREADY\r\n";
@@ -50,10 +51,7 @@ void thermostat_tick(thermostat_t* ts) {
         // śledzenie overshoot'u
         // mierzymy o ile temperatura przekroczyła setpoint
         if (ts->measurement > ts->setpoint) {
-            float overshoot = ts->measurement - ts->setpoint;
-            if (overshoot > ts->overshoot_max) {
-                ts->overshoot_max = overshoot;
-            }
+            ts->overshoot_max = ts->measurement - ts->setpoint;
         }
     } else {
         // reset wyjścia i całki w trybach innych niż RUNNING
@@ -61,16 +59,19 @@ void thermostat_tick(thermostat_t* ts) {
         ts->controller.integral_accumulator = 0.0f;
     }
     
-    // 3.  FSM - sprawdzenie warunków przejścia
-    // WHY: warunki dotyczą bezpieczeństwa (watchdog, limity temperatury)
-    int limits_ok = (ts->measurement < 10.0f) && (ts->measurement > -10.0f);
+    // 3. FSM - przejście do następnego stanu
+    // nasz system monitoruje dwa warunki:
+    // - czy watchdog nie przekroczył timeoutu - upewnia się, że system nie jest zawieszony
+    // - czy temperatura nie przekroczyła limitów obsługiwanego obiektu 
+    int limits_ok = (ts->measurement < ts->plant.temp_limit_max) && (ts->measurement > ts->plant.temp_limit_min);
+    // int limits_ok = (ts->measurement < 10.0f) && (ts->measurement > -10.0f);
     int watchdog_ok = (ts->watchdog_counter <= ts->watchdog_timeout);
     
     ts->state_machine.next_state = fsm_next_state(&ts->state_machine, watchdog_ok, limits_ok);
     ts->state_machine.current_state = ts->state_machine.next_state;
     
-    // 4. Telemetria / Logi
-    // wypisanie statusu co 50 ticków (przejrzystość logów)
+    // 4. Telemateria
+    // wypisanie statusu co 50 ticków
     if (ts->tick_count % 50 == 0) {
         char status[128];
         thermostat_get_status(ts, status, sizeof(status));
