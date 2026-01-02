@@ -17,7 +17,7 @@ TEST_OBJECTS = $(TEST_SOURCES:%.c=$(BUILD_DIR)/%.o)
 all: build
 
 build: $(EXECUTABLE)
-	@echo "✓ Build successful: $(EXECUTABLE)"
+	@echo "Build successful: $(EXECUTABLE)"
 
 $(EXECUTABLE): $(APP_OBJECTS)
 	@mkdir -p $(dir $@)
