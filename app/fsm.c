@@ -33,11 +33,11 @@ fsm_state_t fsm_next_state(fsm_t* fsm, int watchdog_ok, int limits_ok) {
         
         case STATE_FAULT:
             // fault wymaga interwencji operatora, nie mozna z niego wyjść automatycznie
-            // implementacja wyjścia mogłaby skutkować zawieszeniem systemu w pętli FAULT->IDLE->FAULT
+            // implementacja wyjścia w tym miejscu mogłaby skutkować zawieszeniem systemu w pętli FAULT->IDLE->FAULT
             return STATE_FAULT;
         
         case STATE_SAFE:
-            // safe mozna opuścić tylko ręcznie - komenda operatora
+            // safe mozna opuścić tylko ręcznie - komenda operatora, j.w.
             return STATE_SAFE;
         
         default:

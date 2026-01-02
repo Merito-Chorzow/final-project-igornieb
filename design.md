@@ -18,6 +18,13 @@ Architektura zapewnia modularność i separację odpowiedzialności między komp
 
 Maszyna stanów zarządza trybem pracy termostatu.
 
+Warunki przejść między stanami:
+
+* Z `INIT` można prześć jedynie do `IDLE`. Dzieje się to automatycznie po uruchomieniu systemu.
+* Z `IDLE` przechodzimy do `RUNNING` po otrzymaniu komendy `START` jeżeli nie mamy aktywnego błędu. Jeżeli wystąpił błąd (np. przekroczenie limitów temperatury), przechodzimy do `FAULT`.
+* Z `RUNNING` można przejść do `SAFE` w przypadku timeoutu watchdoga, lub do `FAULT` jeśli wystąpił błąd.
+* Z `FAULT` lub `SAFE` nie można przejść w żaden stan bezpośrednio. Wymagana jest interwencja operatora poprzez komendę `RESET`, która przenosi system do stanu `IDLE`.
+
 ### Opis Stanów:
 -   **IDLE:** System jest gotowy do pracy, ale pętla regulacji jest nieaktywna. Oczekuje na komendę `START`.
 -   **RUNNING:** Główny stan operacyjny. Regulator PI jest aktywny i steruje temperaturą obiektu.
