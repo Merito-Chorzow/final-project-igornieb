@@ -82,6 +82,9 @@ void thermostat_tick(thermostat_t* ts) {
 }
 
 void thermostat_rx_command(thermostat_t* ts, const char* cmd) {
+    // Każda komnda resetuje watchdog
+    ts->watchdog_counter = 0;
+
     // Obsługa komend tekstowych z interfejsu CLI
     
     if (strncmp(cmd, "SET ", 4) == 0) {

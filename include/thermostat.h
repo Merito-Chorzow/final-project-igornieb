@@ -25,10 +25,10 @@ typedef struct {
     
     // Telemetria
     int print_status;           // Flaga do drukowania statusu
-    uint32_t tick_count;        // Licznik iteracji
-    uint32_t watchdog_counter;  // Licznik watchdoga
-    uint32_t watchdog_timeout;  // Ile ticków bez zmian = timeout
-    uint32_t fault_count;       // Licznik błędów
+    int tick_count;        // Licznik iteracji
+    int watchdog_counter;  // Licznik watchdoga
+    int watchdog_timeout;  // Ile ticków bez zmian = timeout
+    int fault_count;       // Licznik błędów
     float overshoot_max;        // Statystyka overshoot'u
     
 } thermostat_t;
