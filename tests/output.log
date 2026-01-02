@@ -1,20 +1,23 @@
 ./build/thermostat_test
-=== Thermostat Control System ===
+=== Thermostat Control System - Test Suite ===
 PID: kp=1.2, ki=0.15, plant_alpha=0.6
 
-=== Test 1: Step Response (Heating, Set=5.0) ===
+=== Test setpoint ===
 [  0] T= 0.000 SET= 5.000 U= 1.000 OVH= 0.000 STATE=RUNNING
-[ 40] T= 5.028 SET= 5.000 U=-0.000 OVH= 0.029 STATE=RUNNING
-[ 80] T= 5.027 SET= 5.000 U=-0.000 OVH= 0.029 STATE=RUNNING
-[120] T= 5.026 SET= 5.000 U=-0.000 OVH= 0.029 STATE=RUNNING
-[160] T= 5.024 SET= 5.000 U=-0.000 OVH= 0.029 STATE=RUNNING
-[200] T= 5.023 SET= 5.000 U=-0.000 OVH= 0.029 STATE=RUNNING
-[240] T= 5.022 SET= 5.000 U=-0.000 OVH= 0.029 STATE=RUNNING
-[280] T= 5.021 SET= 5.000 U=-0.000 OVH= 0.029 STATE=RUNNING
-[320] T= 5.020 SET= 5.000 U=-0.000 OVH= 0.029 STATE=RUNNING
-[360] T= 5.019 SET= 5.000 U=-0.000 OVH= 0.029 STATE=RUNNING
+[ 40] T= 5.028 SET= 5.000 U=-0.000 OVH= 0.028 STATE=RUNNING
+[ 80] T= 5.027 SET= 5.000 U=-0.000 OVH= 0.027 STATE=RUNNING
+[120] T= 5.026 SET= 5.000 U=-0.000 OVH= 0.026 STATE=RUNNING
+[160] T= 5.024 SET= 5.000 U=-0.000 OVH= 0.024 STATE=RUNNING
+[200] T= 5.023 SET= 5.000 U=-0.000 OVH= 0.023 STATE=RUNNING
+[240] T= 5.022 SET= 5.000 U=-0.000 OVH= 0.022 STATE=RUNNING
+[280] T= 5.021 SET= 5.000 U=-0.000 OVH= 0.021 STATE=RUNNING
+[320] T= 5.020 SET= 5.000 U=-0.000 OVH= 0.020 STATE=RUNNING
+[360] T= 5.019 SET= 5.000 U=-0.000 OVH= 0.019 STATE=RUNNING
+[400] T= 5.018 SET= 5.000 U=-0.000 OVH= 0.018 STATE=RUNNING
+[440] T= 5.017 SET= 5.000 U=-0.000 OVH= 0.017 STATE=RUNNING
+[480] T= 5.016 SET= 5.000 U=-0.000 OVH= 0.016 STATE=RUNNING
 
-Stopped. Final overshoot: 0.029
+Stopped. Final overshoot: 0.016
 
 === Test 2: Multiple Setpoints (Heating & Cooling) ===
 
@@ -49,12 +52,13 @@ Setpoint 1.0:
 === Test 3: Watchdog Timeout ===
 Running normally for 50 ticks...
 State: RUNNING, Temp: 0.501
-Simulating system hang (running 600 more ticks without responding to commands)...
+Simulating system hang (running 600 more ticks without new commands)...
   [tick 550] Watchdog timeout triggered! State should change to SAFE
 After hang simulation, checking status:
 State: SAFE (should be SAFE), Temp: 0.500, U: 0.000
 
 === Test 4: RESET Command (Recovery from SAFE) ===
+State before RESET: SAFE
 State after RESET: IDLE (should be IDLE)
 
 === TX Buffer Output ===
