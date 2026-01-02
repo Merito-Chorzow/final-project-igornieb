@@ -5,7 +5,6 @@ typedef struct {
     float kp;           // Proporcjonalne wzmocnienie
     float ki;           // Całkujące wzmocnienie
     float integral_accumulator; // Akumulator całki
-    float previous_error;     // Poprzedni błąd
     float integral_limit;     // Anti-windup: limit całki
     float u_min, u_max; // Saturacja wyjścia - bez limitu układ wychodzi z zakresu fizycznego
 } control_pi_t;

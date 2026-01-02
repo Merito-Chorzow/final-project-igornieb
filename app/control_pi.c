@@ -4,7 +4,6 @@
 
 void control_pi_init(control_pi_t* pi, float kp, float ki, float integral_limit) {
     pi->integral_accumulator = 0.0f;
-    pi->previous_error = 0.0f;
     pi->kp = kp;
     pi->ki = ki;
     pi->integral_limit = integral_limit;
@@ -30,8 +29,6 @@ float control_pi_step(control_pi_t* pi, float setpoint, float measurement, float
     pi->integral_accumulator += pi->ki * e * ts;
     
     // Anti-windup - ograniczenie całki
-    // Jeśli całka rośnie bez końca (setpoint nigdy nie będzie osiągnięty),
-    // może spowodować "odbicie" (bounce) i oscylacje
     if (pi->integral_accumulator > pi->integral_limit) pi->integral_accumulator = pi->integral_limit;
     if (pi->integral_accumulator < -pi->integral_limit) pi->integral_accumulator = -pi->integral_limit;
     
@@ -41,6 +38,5 @@ float control_pi_step(control_pi_t* pi, float setpoint, float measurement, float
     if (u > pi->u_max) u = pi->u_max;
     if (u < pi->u_min) u = pi->u_min;
     
-    pi->previous_error = e;
     return u;
 }
