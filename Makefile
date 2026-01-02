@@ -46,6 +46,7 @@ help:
 	@echo "  make build  - Compile the project"
 	@echo "  make run    - Compile and run"
 	@echo "  make clean  - Remove build artifacts"
-	@echo ""
-	@echo "Detected OS: $(UNAME)"
+	@echo "  make test   - Compile and run tests"
+info:
+	@echo "Detected OS: $(shell uname -s)"
 	@echo "Build target: $(EXECUTABLE)"
