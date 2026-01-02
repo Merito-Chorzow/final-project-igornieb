@@ -1,3 +1,4 @@
+./build/thermostat_test
 === Thermostat Control System ===
 PID: kp=1.2, ki=0.15, plant_alpha=0.6
 
