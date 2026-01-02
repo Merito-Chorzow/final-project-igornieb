@@ -63,7 +63,7 @@ void thermostat_tick(thermostat_t* ts) {
     
     // 3.  FSM - sprawdzenie warunków przejścia
     // WHY: warunki dotyczą bezpieczeństwa (watchdog, limity temperatury)
-    int limits_ok = (ts->measurement < 8.0f) && (ts->measurement > -8.0f);
+    int limits_ok = (ts->measurement < 10.0f) && (ts->measurement > -10.0f);
     int watchdog_ok = (ts->watchdog_counter <= ts->watchdog_timeout);
     
     ts->state_machine.next_state = fsm_next_state(&ts->state_machine, watchdog_ok, limits_ok);
@@ -151,7 +151,7 @@ void thermostat_rx_command(thermostat_t* ts, const char* cmd) {
     }
     else if (strncmp(cmd, "HELP", 4) == 0) {
         // dokumentacja dostępnych komend w systemie
-        const char* help_text = "Commands: SET <val>, START, STOP, SENSOR <val>, STATUS, RESET, HELP\r\n";
+        const char* help_text = "Commands: SET <v>, START, STOP, SENSOR <v>, STATUS, RESET, HELP, TICK <n>, EXIT\r\n";
         for (const char* p = help_text; *p; p++) {
             ringbuf_put(&ts->tx, (uint8_t)*p);
         }

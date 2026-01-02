@@ -1,97 +1,79 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "thermostat.h"
 
-int main(void) {
-    printf("=== Thermostat Control System ===\n");
-    printf("PID: kp=1.2, ki=0.15, plant_alpha=0.6\n\n");
-    
-    thermostat_t ts;
-    thermostat_init(&ts, 1.2f, 0.15f, 0.6f);
-
-    // Test 1. Duży skok temperatury (grzanie)
-    printf("=== Test 1: Step Response (Heating, Set=5.0) ===\n");
-    thermostat_rx_command(&ts, "SET 5.0");
-    thermostat_rx_command(&ts, "START");
-    
-    // uruchamiamy 400 ticków (symulacja ~4 sekund)
-    for (int i = 0; i < 400; i++) {
-        thermostat_tick(&ts);
-        
-        // wypisujemy co 40 ticków
-        if (i % 40 == 0) {
-            printf("[%3d] T=%6.3f SET=%6.3f U=%6.3f OVH=%6.3f STATE=%s\n",
-                   i, ts.measurement, ts.setpoint, ts.control_output, 
-                   ts.overshoot_max, fsm_state_name(ts.state_machine.current_state));
-        }
-    }
-    
-    // STOP zatrzymuje regulację
-    thermostat_rx_command(&ts, "STOP");
-    printf("\nStopped. Final overshoot: %.3f\n\n", ts.overshoot_max);
-    
-    // 2. Test zmiany setpointa w szerokim zakresie (grzanie i chłodzenie)
-    printf("=== Test 2: Multiple Setpoints (Heating & Cooling) ===\n");
-    thermostat_init(&ts, 1.2f, 0.15f, 0.6f);
-    
-    float setpoints[] = {-2.0f, 4.0f, -3.0f, 1.0f};
-    for (int sp = 0; sp < 4; sp++) {
-        char cmd[32];
-        snprintf(cmd, sizeof(cmd), "SET %.1f", setpoints[sp]);
-        thermostat_rx_command(&ts, cmd);
-        thermostat_rx_command(&ts, "START");
-        
-        printf("\nSetpoint %.1f:\n", setpoints[sp]);
-        // Dłuższy czas na stabilizację
-        for (int i = 0; i < 250; i++) {
-            thermostat_tick(&ts);
-            if (i % 50 == 0) {
-                printf("  [%3d] T=%.3f U=%.3f\n", i, ts.measurement, ts.control_output);
-            }
-        }
-        thermostat_rx_command(&ts, "STOP");
-    }
-    
-    // 3. Test symulacji awarii (watchdog timeout)
-    printf("\n=== Test 3: Watchdog Timeout ===\n");
-    thermostat_init(&ts, 1.2f, 0.15f, 0.6f);
-    thermostat_rx_command(&ts, "SET 0.5");
-    thermostat_rx_command(&ts, "START");
-    
-    printf("Running normally for 50 ticks...\n");
-    for (int i = 0; i < 50; i++) {
-        thermostat_tick(&ts);
-    }
-    printf("State: %s, Temp: %.3f\n", fsm_state_name(ts.state_machine.current_state), ts.measurement);
-    
-    // SYMULACJA ZAWIESZENIA: nadal wywoływujemy tick(), ale bez przetwarzania komend
-    // W ten sposób watchdog_counter rośnie, ale system "nie odpowiada na komendy"
-    printf("Simulating system hang (running %d more ticks without responding to commands)...\n", 600);
-    for (int i = 0; i < 600; i++) {
-        thermostat_tick(&ts);
-        if (i == 500) {
-            printf("  [tick %d] Watchdog timeout triggered! State should change to SAFE\n", 50 + i);
-        }
-    }
-    
-    printf("After hang simulation, checking status:\n");
-    printf("State: %s (should be SAFE), Temp: %.3f, U: %.3f\n", 
-           fsm_state_name(ts.state_machine.current_state), ts.measurement, ts.control_output);
-    thermostat_rx_command(&ts, "STATUS");
-    
-    // 4. Test recovery z SAFE stanu
-    printf("\n=== Test 4: RESET Command (Recovery from SAFE) ===\n");
-    thermostat_rx_command(&ts, "RESET");
-    printf("State after RESET: %s (should be IDLE)\n", fsm_state_name(ts.state_machine.current_state));
-    thermostat_rx_command(&ts, "STATUS");
-    
-    printf("\n=== TX Buffer Output ===\n");
+// Funkcja pomocnicza do wypisywania odpowiedzi z termostatu
+void print_thermostat_response(thermostat_t* ts) {
     uint8_t byte;
-    while (ringbuf_get(&ts.tx, &byte)) {
+    while (ringbuf_get(&ts->tx, &byte)) {
         putchar((char)byte);
     }
+}
+
+int main(void) {
+    printf("=== Thermostat Simulator ===\n");
+    printf("Available commands: SET <val>, START, STOP, STATUS, RESET, HELP, TICK <n>, EXIT\n\n");
+    printf("Additional simulation commands:\n");
+    printf("  TICK <n> - Run simulation for n ticks\n");
+    printf("  SENSOR <val> - Set temperature (overrides current temperature)\n");
+    printf("  EXIT - Exit simulator\n");
+
     
-    printf("\n\n=== All Tests Completed ===\n");
+    thermostat_t ts;
+    // Ustrawienie paramentów regulatora i symulacji
+    thermostat_init(&ts, 1.2f, 0.15f, 0.6f);
+
+    print_thermostat_response(&ts);
+
+    char line_buffer[128];
+
+    // Pętla główna
+    // Umożliwia symulaję upływu czasu i interakcję z termostatem
+    while (1) {
+        // Zasugerowanie użytkownikowi wpisania komendy
+        printf("> ");
+        fflush(stdout);
+
+        // Czytaj komendę od użytkownika
+        if (fgets(line_buffer, sizeof(line_buffer), stdin) == NULL) {
+            break; // Wyjście przy EOF/bledzie 
+        }
+        // Trzeba usunąć znak nowej linii z końca komendy
+        line_buffer[strcspn(line_buffer, "\r\n")] = 0;
+
+        // Obsługa komend specjalnych/symulacyjnych
+        // EXIT - wyjście z symulatora
+        if (strcasecmp(line_buffer, "EXIT") == 0) {
+            printf("Exiting simulator.\n");
+            break;
+        }
+
+        // TICK - symulacja upływu czasu
+        if (strncmp(line_buffer, "TICK", 4) == 0) {
+            int ticks_to_run = 1;
+            // Walidacja liczby ticków
+            if (strlen(line_buffer) > 4) {
+                ticks_to_run = atoi(line_buffer + 5);
+            }
+            if (ticks_to_run > 0) {
+                printf("--- Running %d simulation tick(s) ---\n", ticks_to_run);
+                for (int i = 0; i < ticks_to_run; i++) {
+                    thermostat_tick(&ts);
+                }
+                // Automatycznie wyświetl status po tickach, aby zobaczyć efekt
+                thermostat_rx_command(&ts, "STATUS");
+            }
+        } else {
+            // Obsługa komend termostatus
+            thermostat_rx_command(&ts, line_buffer);
+        }
+
+        // Odpowiedź z termostatu
+        print_thermostat_response(&ts);
+    }
+
+    printf("\n=== Simulation Finished ===\n");
     return 0;
 }
